@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Галактика Вкуса — космическое путешествие</title>
+<style>
+  :root{
+    --bg:#05010f;
+    --panel:rgba(20,12,45,.75);
+    --panel-solid:#150b2e;
+    --accent:#8b5cf6;
+    --accent2:#22d3ee;
+    --gold:#fbbf24;
+    --text:#f5f3ff;
+    --muted:#a9a3c9;
+    --ok:#34d399;
+    --err:#fb7185;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1200px 800px at 80% -10%, rgba(139,92,246,.35), transparent 60%),
+      radial-gradient(900px 700px at -10% 110%, rgba(34,211,238,.25), transparent 60%),
+      radial-gradient(700px 500px at 50% 50%, rgba(251,191,36,.08), transparent 70%),
+      var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  #stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .star{position:absolute;background:#fff;border-radius:50%;opacity:.7;animation:twinkle 3s infinite ease-in-out}
+  @keyframes twinkle{0%,100%{opacity:.15}50%{opacity:.9}}
+  .wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:24px 18px 80px}
+  .screen{display:none;animation:fade .45s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  /* ---------- START ---------- */
+  .hero{text-align:center;padding:30px 0 10px}
+  .logo{font-size:13px;letter-spacing:.35em;text-transform:uppercase;color:var(--accent2);margin-bottom:14px}
+  h1{font-size:clamp(26px,5vw,44px);line-height:1.1;margin-bottom:14px;
+     background:linear-gradient(90deg,#fff,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);max-width:560px;margin:0 auto 26px;line-height:1.55;font-size:16px}
+  .card{background:var(--panel);backdrop-filter:blur(12px);border:1px solid rgba(139,92,246,.28);
+        border-radius:20px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+  .form{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  input[type=text],input[type=tel],input[type=email]{
+    width:100%;padding:13px 15px;border-radius:12px;border:1px solid rgba(139,92,246,.35);
+    background:rgba(10,5,25,.75);color:var(--text);font-size:15px;outline:none;transition:.2s}
+  input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+  .consent{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--muted);line-height:1.45}
+  .consent input{margin-top:3px;accent-color:var(--accent)}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 22px;border-radius:12px;border:none;cursor:pointer;font-size:16px;font-weight:600;
+    background:linear-gradient(135deg,#8b5cf6,#22d3ee);color:#fff;transition:.2s;
+    box-shadow:0 10px 30px rgba(139,92,246,.4)}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(139,92,246,.55)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn.ghost{background:transparent;border:1px solid rgba(139,92,246,.5);box-shadow:none}
+  .btn.small{padding:10px 16px;font-size:14px}
+  .err-msg{color:var(--err);font-size:13px;text-align:center;min-height:18px}
+
+  /* ---------- TOPBAR ---------- */
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+  .crystals{display:flex;align-items:center;gap:8px;background:rgba(20,12,45,.8);padding:9px 16px;border-radius:30px;
+    border:1px solid rgba(251,191,36,.35);font-weight:600}
+  .crystals .dot{width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+  .who{font-size:14px;color:var(--muted)}
+
+  /* ---------- MAP ---------- */
+  .map-title{text-align:center;margin-bottom:6px;font-size:clamp(20px,4vw,30px)}
+  .map-sub{text-align:center;color:var(--muted);margin-bottom:26px;font-size:14px}
+  .planets{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:18px}
+  .planet{
+    position:relative;background:var(--panel);border:1px solid rgba(139,92,246,.25);
+    border-radius:20px;padding:20px 14px;text-align:center;cursor:pointer;transition:.25s;overflow:hidden}
+  .planet:hover{transform:translateY(-4px);border-color:var(--accent2);box-shadow:0 16px 40px rgba(34,211,238,.2)}
+  .orb{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;position:relative;
+       display:flex;align-items:center;justify-content:center;font-size:34px;
+       animation:float 5s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .planet:nth-child(2) .orb{animation-delay:.6s}
+  .planet:nth-child(3) .orb{animation-delay:1.2s}
+  .planet:nth-child(4) .orb{animation-delay:1.8s}
+  .planet:nth-child(5) .orb{animation-delay:2.4s}
+  .p-name{font-weight:600;font-size:15px;margin-bottom:4px}
+  .p-status{font-size:12px;color:var(--muted)}
+  .planet.done{border-color:rgba(52,211,153,.6)}
+  .planet.done .p-status{color:var(--ok)}
+  .badge{position:absolute;top:10px;right:10px;font-size:16px}
+
+  /* ---------- QUIZ ---------- */
+  .back{margin-bottom:18px}
+  .planet-head{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+  .planet-head .orb{width:64px;height:64px;font-size:28px;margin:0;flex:0 0 auto}
+  .planet-head h2{font-size:clamp(20px,4vw,26px)}
+  .planet-head p{font-size:13px;color:var(--muted);margin-top:3px}
+  .progress{height:8px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden;margin-bottom:22px}
+  .progress i{display:block;height:100%;background:linear-gradient(90deg,#8b5cf6,#22d3ee);transition:width .4s}
+  .q{font-size:18px;font-weight:600;margin-bottom:18px;line-height:1.4}
+  .answers{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+  .answer{padding:14px 16px;border-radius:12px;border:1px solid rgba(139,92,246,.3);background:rgba(10,5,25,.6);
+    color:var(--text);font-size:15px;text-align:left;cursor:pointer;transition:.15s}
+  .answer:hover:not(:disabled){border-color:var(--accent2);background:rgba(34,211,238,.08)}
+  .answer:disabled{cursor:default}
+  .answer.right{border-color:var(--ok);background:rgba(52,211,153,.15)}
+  .answer.wrong{border-color:var(--err);background:rgba(251,113,133,.15)}
+  .feedback{font-size:14px;min-height:22px;margin-bottom:16px;color:var(--muted)}
+  .reward{text-align:center;padding:10px 0}
+  .reward .big{font-size:52px;margin-bottom:10px;display:block}
+  .lesson{background:rgba(10,5,25,.6);border:1px dashed rgba(251,191,36,.4);border-radius:14px;
+    padding:18px;margin:16px 0;text-align:left}
+  .lesson h4{color:var(--gold);font-size:13px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+  .lesson p{font-size:14px;line-height:1.6;color:#ddd6fe}
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+
+  /* ---------- FINAL ---------- */
+  .cert{
+    background:linear-gradient(160deg,#1a0f3a,#0b0620);border:2px solid var(--gold);border-radius:20px;
+    padding:32px 24px;text-align:center;position:relative;overflow:hidden;margin-bottom:22px}
+  .cert::before{content:"";position:absolute;inset:8px;border:1px solid rgba(251,191,36,.35);border-radius:14px;pointer-events:none}
+  .cert .kicker{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+  .cert .name{font-size:clamp(22px,5vw,32px);font-weight:700;margin-bottom:6px;color:#fff}
+  .cert .line{color:var(--muted);font-size:14px;margin-bottom:16px}
+  .cert .disc{font-size:clamp(30px,7vw,46px);font-weight:800;color:var(--gold);margin:8px 0}
+  .cert .code{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted);margin-top:14px;letter-spacing:.1em}
+  .interests{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+  .i-row{display:flex;align-items:center;gap:10px;font-size:14px}
+  .i-bar{flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden}
+  .i-bar i{display:block;height:100%;background:linear-gradient(90deg,#22d3ee,#8b5cf6)}
+  .i-name{min-width:130px;color:var(--muted)}
+  .final-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .debug{margin-top:26px;font-size:12px}
+  .debug pre{background:#0b0620;border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:14px;
+    overflow:auto;max-height:340px;color:#c4b5fd;white-space:pre-wrap;word-break:break-word;margin-top:10px}
+  .hidden{display:none}
+
+  @media print{
+    body{background:#fff;color:#111}
+    #stars,.topbar,.final-actions,.debug,.no-print{display:none!important}
+    .cert{border-color:#b45309;color:#111;background:#fff}
+    .cert .name,.cert .disc{color:#b45309}
+  }
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div class="wrap">
+
+  <!-- ================= START ================= -->
+  <section id="screen-start" class="screen active">
+    <div class="hero">
+      <div class="logo">Академия крафтовых продуктов</div>
+      <h1>Галактика Вкуса</h1>
+      <p class="sub">Станьте капитаном гастрономической экспедиции. Откройте 5 планет, соберите кристаллы знаний и получите именной сертификат на 10 000 сырных рублей + мини-курс из 5 рецептов.</p>
+    </div>
+    <div class="card">
+      <form class="form" id="startForm" novalidate>
+        <div>
+          <label for="fName">Как вас зовут?</label>
+          <input type="text" id="fName" placeholder="Иван" autocomplete="given-name">
+        </div>
+        <div>
+          <label for="fPhone">Телефон (для подарков и консультации)</label>
+          <input type="tel" id="fPhone" placeholder="+7 999 123-45-67" autocomplete="tel">
+        </div>
+        <div>
+          <label for="fEmail">Email</label>
+          <input type="email" id="fEmail" placeholder="ivan@mail.ru" autocomplete="email">
+        </div>
+        <label class="consent">
+          <input type="checkbox" id="fConsent">
+          <span>Согласен на обработку персональных данных и получение сообщений о курсах. Можно отписаться в любой момент.</span>
+        </label>
+        <div class="err-msg" id="startErr"></div>
+        <button type="button" class="btn" id="startBtn">🚀 Начать путешествие</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= MAP ================= -->
+  <section id="screen-map" class="screen">
+    <div class="topbar">
+      <div class="crystals"><span class="dot"></span><span id="crystalCount">0</span> / 5 кристаллов</div>
+      <div class="who" id="whoami"></div>
+    </div>
+    <h2 class="map-title">Карта галактики</h2>
+    <p class="map-sub">Выберите планету. Порядок любой — но чтобы получить сертификат, откройте все 5.</p>
+    <div class="planets" id="planets"></div>
+    <div class="row" style="margin-top:26px">
+      <button class="btn ghost small" id="toFinalBtn">Завершить путешествие</button>
+    </div>
+  </section>
+
+  <!-- ================= PLANET ================= -->
+  <section id="screen-planet" class="screen">
+    <button class="btn ghost small back" id="backToMap">← На карту</button>
+    <div class="planet-head">
+      <div class="orb" id="pOrb">🧀</div>
+      <div>
+        <h2 id="pTitle">Планета</h2>
+        <p id="pIntro"></p>
+      </div>
+    </div>
+    <div class="progress"><i id="pProgress" style="width:0%"></i></div>
+    <div class="card" id="quizCard">
+      <div class="q" id="qText"></div>
+      <div class="answers" id="qAnswers"></div>
+      <div class="feedback" id="qFeedback"></div>
+    </div>
+    <div class="card reward hidden" id="rewardCard">
+      <span class="big" id="rewardEmoji">💎</span>
+      <h3 id="rewardTitle">Планета открыта!</h3>
+      <p style="color:var(--muted);font-size:14px;margin-top:6px" id="rewardSub"></p>
+      <div class="lesson">
+        <h4>Мини-урок в подарок</h4>
+        <p id="lessonText"></p>
+      </div>
+      <button class="btn ghost small" id="wantMoreBtn">⭐ Хочу узнать больше про этот курс</button>
+      <div class="row" style="margin-top:18px">
+        <button class="btn" id="rewardContinue">Продолжить</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL ================= -->
+  <section id="screen-final" class="screen">
+    <div class="topbar">
+      <div class="crystals"><span class="dot"></span><span id="crystalCount2">0</span> / 5 кристаллов</div>
+      <div class="who" id="whoami2"></div>
+    </div>
+    <div class="card">
+      <h2 class="map-title" style="margin-bottom:6px">Экспедиция завершена! 🎉</h2>
+      <p class="map-sub">Вы собрали <b id="finalCrystals">0</b> из 5 кристаллов. Ваши награды ниже.</p>
+
+      <div class="cert" id="cert">
+        <div class="kicker">Именной сертификат</div>
+        <div class="name" id="certName">Иван</div>
+        <div class="line">успешно завершил(а) экспедицию «Галактика Вкуса»<br>и получает 10 000 сырных рублей на оплату курсов<br>(можно потратить полностью или частично)</div>
+        <div class="disc" id="certDiscount">10 000 сырных рублей</div>
+        <div class="line" style="margin-bottom:0">Действует 14 дней с момента получения</div>
+        <div class="code" id="certCode">GV-XXXX-XXXX</div>
+      </div>
+
+      <h3 style="margin:18px 0 10px;font-size:16px">Ваш мини-курс из 5 рецептов</h3>
+      <div class="lesson" style="border-color:rgba(34,211,238,.4)">
+        <h4 style="color:var(--accent2)">Что внутри</h4>
+        <p>Домашняя моцарелла за 30 минут · Греческий йогурт · Безопарный хлеб на закваске · Шоколадный ганаш · Варёная колбаса. Все рецепты с граммовками и температурными режимами.</p>
+      </div>
+      <p style="color:var(--muted);font-size:13px">Мы отправим мини-курс на указанный email в течение 5 минут.</p>
+
+      <h3 style="margin:24px 0 10px;font-size:16px">Ваши интересы по планетам</h3>
+      <div class="interests" id="interests"></div>
+
+      <div class="final-actions no-print" style="margin-top:26px">
+        <button class="btn" id="bookBtn">📞 Забронировать бесплатную консультацию</button>
+        <button class="btn ghost" onclick="window.print()">🖨 Скачать сертификат</button>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn ghost small" id="replayBtn">Пройти заново</button>
+      </div>
+    </div>
+
+    <div class="debug no-print">
+      <button class="btn ghost small" id="toggleDebug">Показать данные лида (для отладки CRM)</button>
+      <pre id="debugOut" class="hidden"></pre>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   КОНФИГ — правьте под себя. Всё содержимое игры здесь.
+   ============================================================ */
+const CONFIG = {
+  schoolName: "Академия крафтовых продуктов",
+  discount: "10 000 сырных рублей", // награда на сертификате
+  webhookUrl: "",                // ← вставьте URL вебхука (Make/Zapier/amoCRM), пусто = не отправлять
+  consultationUrl: "",           // ← ссылка на Calendly/форму записи, пусто = показать сообщение
+  planets: [
+    {
+      id: "cheese", name: "Сырная", emoji: "🧀",
+      c1: "#ffd86b", c2: "#e08b0a",
+      intro: "Планета, где молоко превращается в золото. Сычужные, рассольные, твёрдые — здесь начинают все сыровары.",
+      questions: [
+        { q: "Какой фермент чаще всего используют для свёртывания молока в домашнем сыре?",
+          options: ["Сычужный фермент", "Пищевая сода", "Пекарские дрожжи", "Кукурузный крахмал"], correct: 0 },
+        { q: "При какой температуре вносят фермент в молоко для большинства сыров?",
+          options: ["10–15 °C", "32–35 °C", "60–70 °C", "90–100 °C"], correct: 1 },
+        { q: "Что нужно, чтобы у сыра получилась ровная корочка?",
+          options: ["Подержать в морозилке", "Влажность, соль и правильная температура созревания", "Добавить сахар", "Обжарить на сковороде"], correct: 1 }
+      ],
+      lesson: "Рецепт: домашняя моцарелла за 30 минут. Возьмите 2 л молока 3,2%, нагрейте до 35 °C, внесите фермент, оставьте на 30 минут, разрежьте сгусток на кубики 2×2 см, нагрейте до 45 °C, отделите сыворотку и растяните сыр в горячей воде. Готово!"
+    },
+    {
+      id: "dairy", name: "Кисломолочная", emoji: "🥛",
+      c1: "#a7f3ff", c2: "#0ea5b7",
+      intro: "Лёгкая и живая планета. Йогурт, кефир, творог, рикотта — самое быстрое начало для домашней молочки.",
+      questions: [
+        { q: "Что нужно, чтобы молоко превратилось в йогурт?",
+          options: ["Сахар", "Закваска с болгарской палочкой и термофильным стрептококком", "Соль", "Уксус"], correct: 1 },
+        { q: "Какая температура сквашивания йогурта считается оптимальной?",
+          options: ["20–25 °C", "40–42 °C", "70–80 °C", "100 °C"], correct: 1 },
+        { q: "Как получить домашний творог из сквашенного молока?",
+          options: ["Заморозить", "Нагреть до 50–60 °C и отделить сыворотку", "Добавить соду", "Взбить блендером"], correct: 1 }
+      ],
+      lesson: "Рецепт: греческий йогурт. 1 л молока + 1 ампула закваски, сквашивайте 6–8 часов при 42 °C. Затем откиньте на марлю и подвесьте на 2 часа — уйдёт лишняя сыворотка, останется густой йогурт."
+    },
+    {
+      id: "bread", name: "Хлебная", emoji: "🍞",
+      c1: "#fcd9a0", c2: "#b45309",
+      intro: "Тёплая планета пекарей. Здесь тесто поднимается само, а закваска живёт годами.",
+      questions: [
+        { q: "Что такое хлебная закваска?",
+          options: ["Смесь муки и воды, в которой живут дикие дрожжи и бактерии", "Дрожжи из магазина", "Разрыхлитель", "Сметана"], correct: 0 },
+        { q: "Зачем тесту нужна расстойка?",
+          options: ["Чтобы остыло", "Чтобы развился глютен и тесто поднялось", "Чтобы убрать вкус", "Чтобы тесто стало солёным"], correct: 1 },
+        { q: "Что означает «гидратация теста» в хлебе?",
+          options: ["Температура духовки", "Соотношение воды и муки", "Время выпечки", "Количество соли"], correct: 1 }
+      ],
+      lesson: "Рецепт: безопарный хлеб на закваске. 500 г муки, 350 г воды, 150 г закваски, 10 г соли. Замес, 4 часа с растяжкой каждые 40 минут, формировка, расстойка 1 час, выпечка 25 минут при 250 °C под крышкой."
+    },
+    {
+      id: "dessert", name: "Десертная", emoji: "🍰",
+      c1: "#fbcfe8", c2: "#be185d",
+      intro: "Сладкая планета с карамельными реками. Торты, эклеры, конфеты — здесь творят кондитеры.",
+      questions: [
+        { q: "Что придаёт крему устойчивость и держит форму?",
+          options: ["Желатин или агар-агар", "Соль", "Мука", "Сода"], correct: 0 },
+        { q: "До какой температуры уваривают карамель для конфет?",
+          options: ["100 °C", "130 °C", "160–170 °C", "300 °C"], correct: 2 },
+        { q: "Зачем шоколад темперируют перед использованием?",
+          options: ["Чтобы он быстрее растаял", "Чтобы он блестел и хрустел после застывания", "Чтобы убрать сахар", "Чтобы изменить цвет"], correct: 1 }
+      ],
+      lesson: "Рецепт: шоколадный ганаш для трюфелей. 200 г тёмного шоколада + 100 г горячих сливок 33%. Перемешать до гладкости, охладить 2 часа, скатать шарики и обвалять в какао."
+    },
+    {
+      id: "sausage", name: "Колбасная", emoji: "🥓",
+      c1: "#fecaca", c2: "#991b1b",
+      intro: "Планета мясных дел мастеров. Домашняя колбаса — это не сложно, если знать температуру и посол.",
+      questions: [
+        { q: "Какую соль используют для домашней колбасы, чтобы она была безопасной и розовой?",
+          options: ["Морскую", "Нитритную", "Сахарную", "Йодированную"], correct: 1 },
+        { q: "Зачем колбасную массу набивают в оболочку?",
+          options: ["Для красоты", "Чтобы придать форму и защитить при варке/копчении", "Чтобы она стала сладкой", "Чтобы ускорить варку"], correct: 1 },
+        { q: "Какая температура воды при варке домашней колбасы?",
+          options: ["50 °C", "80 °C (без кипения)", "100 °C кипяток", "150 °C"], correct: 1 }
+      ],
+      lesson: "Рецепт: домашняя варёная колбаса. 1 кг свинины с жиром, 15 г нитритной соли, 3 г сахара, специи. Вымесить, охладить 12 часов, набить в оболочку, варить 40 минут при 80 °C до 72 °C внутри."
+    }
+  ]
+};
+
+/* ============================================================
+   СОСТОЯНИЕ
+   ============================================================ */
+const state = {
+  user: { name: "", phone: "", email: "" },
+  progress: {},           // id -> { answered, correct, wantMore, timeMs, completed }
+  events: [],
+  startedAt: null,
+  finishedAt: null
+};
+CONFIG.planets.forEach(p => {
+  state.progress[p.id] = { answered: 0, correct: 0, wantMore: false, timeMs: 0, completed: false };
+});
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const show = id => {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  try { window.scrollTo({ top: 0, behavior: "smooth" }); }
+  catch (e) { window.scrollTo(0, 0); }
+};
+const logEvent = (type, data = {}) => {
+  state.events.push({ type, ts: new Date().toISOString(), ...data });
+};
+const completedCount = () =>
+  CONFIG.planets.filter(p => state.progress[p.id].completed).length;
+
+function makeStars() {
+  const box = $("stars");
+  const n = 110;
+  let html = "";
+  for (let i = 0; i < n; i++) {
+    const size = (Math.random() * 2 + 0.5).toFixed(1);
+    const x = (Math.random() * 100).toFixed(2);
+    const y = (Math.random() * 100).toFixed(2);
+    const delay = (Math.random() * 3).toFixed(1);
+    html += `<div class="star" style="width:${size}px;height:${size}px;left:${x}%;top:${y}%;animation-delay:${delay}s"></div>`;
+  }
+  box.innerHTML = html;
+}
+makeStars();
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+let startHandled = false;
+
+function startGame() {
+  if (startHandled) return;
+  const name = $("fName").value.trim();
+  const phone = $("fPhone").value.trim();
+  const email = $("fEmail").value.trim();
+  const consent = $("fConsent").checked;
+  const err = $("startErr");
+
+  if (name.length < 2) { err.textContent = "Пожалуйста, укажите имя."; return; }
+  if (phone.replace(/\D/g, "").length < 10) { err.textContent = "Проверьте номер телефона."; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = "Проверьте email."; return; }
+  if (!consent) { err.textContent = "Нужно согласие на обработку данных."; return; }
+
+  startHandled = true;
+  err.textContent = "";
+  state.user = { name, phone, email };
+  state.startedAt = new Date().toISOString();
+  logEvent("game_started", { name });
+
+  $("whoami").textContent = `Капитан: ${name}`;
+  $("whoami2").textContent = `Капитан: ${name}`;
+  renderMap();
+  show("screen-map");
+}
+
+// Кнопка type="button" — нативная отправка формы и перезагрузка страницы исключены.
+$("startBtn").addEventListener("click", startGame);
+
+// Страховка: если форма всё же отправится (Enter / «Go» на клавиатуре телефона),
+// гасим нативную отправку и запускаем игру.
+$("startForm").addEventListener("submit", e => {
+  e.preventDefault();
+  startGame();
+});
+
+$("startForm").addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    startGame();
+  }
+});
+
+/* ============================================================
+   КАРТА
+   ============================================================ */
+function renderMap() {
+  $("crystalCount").textContent = completedCount();
+  $("crystalCount2").textContent = completedCount();
+  const box = $("planets");
+  box.innerHTML = "";
+  CONFIG.planets.forEach(p => {
+    const st = state.progress[p.id];
+    const el = document.createElement("div");
+    el.className = "planet" + (st.completed ? " done" : "");
+    el.innerHTML = `
+      <div class="orb" style="background:radial-gradient(circle at 30% 30%, ${p.c1}, ${p.c2});box-shadow:0 0 40px ${p.c2}88">
+        ${p.emoji}
+      </div>
+      <div class="p-name">${p.name}</div>
+      <div class="p-status">${st.completed ? "✓ открыта" : "не исследована"}</div>
+      ${st.completed ? '<div class="badge">💎</div>' : ''}
+    `;
+    el.addEventListener("click", () => openPlanet(p.id));
+    box.appendChild(el);
+  });
+}
+
+/* ============================================================
+   ПЛАНЕТА / КВИЗ
+   ============================================================ */
+let currentPlanet = null;
+let currentQ = 0;
+let planetStartedAt = 0;
+let answeredThisVisit = 0;
+let correctThisVisit = 0;
+
+function openPlanet(id) {
+  currentPlanet = CONFIG.planets.find(p => p.id === id);
+  const st = state.progress[id];
+
+  $("pOrb").style.background = `radial-gradient(circle at 30% 30%, ${currentPlanet.c1}, ${currentPlanet.c2})`;
+  $("pOrb").style.boxShadow = `0 0 40px ${currentPlanet.c2}88`;
+  $("pOrb").textContent = currentPlanet.emoji;
+  $("pTitle").textContent = "Планета " + currentPlanet.name;
+  $("pIntro").textContent = currentPlanet.intro;
+
+  $("quizCard").classList.remove("hidden");
+  $("rewardCard").classList.add("hidden");
+
+  currentQ = 0;
+  answeredThisVisit = 0;
+  correctThisVisit = 0;
+  planetStartedAt = Date.now();
+
+  logEvent("planet_opened", { planet: id });
+  show("screen-planet");
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = currentPlanet.questions[currentQ];
+  $("qText").textContent = q.q;
+  $("qFeedback").textContent = "";
+  $("pProgress").style.width = (currentQ / currentPlanet.questions.length) * 100 + "%";
+
+  const box = $("qAnswers");
+  box.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const b = document.createElement("button");
+    b.className = "answer";
+    b.textContent = opt;
+    b.addEventListener("click", () => answer(i, b));
+    box.appendChild(b);
+  });
+}
+
+function answer(idx, btn) {
+  const q = currentPlanet.questions[currentQ];
+  const buttons = [...$("qAnswers").children];
+  buttons.forEach(b => (b.disabled = true));
+
+  const isRight = idx === q.correct;
+  btn.classList.add(isRight ? "right" : "wrong");
+  if (!isRight) buttons[q.correct].classList.add("right");
+
+  answeredThisVisit++;
+  if (isRight) correctThisVisit++;
+
+  const st = state.progress[currentPlanet.id];
+  st.answered++;
+  if (isRight) st.correct++;
+
+  $("qFeedback").textContent = isRight
+    ? "Верно! Так держать. 🚀"
+    : "Не страшно — на курсе всё разложим по полочкам.";
+
+  logEvent("question_answered", {
+    planet: currentPlanet.id,
+    question: currentQ + 1,
+    correct: isRight
+  });
+
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ < currentPlanet.questions.length) {
+      renderQuestion();
+    } else {
+      finishPlanet();
+    }
+  }, 950);
+}
+
+function finishPlanet() {
+  const st = state.progress[currentPlanet.id];
+  st.timeMs += Date.now() - planetStartedAt;
+  st.completed = true;
+
+  $("pProgress").style.width = "100%";
+  $("quizCard").classList.add("hidden");
+  $("rewardCard").classList.remove("hidden");
+  $("rewardEmoji").textContent = "💎";
+  $("rewardTitle").textContent = "Планета " + currentPlanet.name + " открыта!";
+  $("rewardSub").textContent = `Верных ответов: ${st.correct} из ${currentPlanet.questions.length}. Кристалл добавлен в коллекцию.`;
+  $("lessonText").textContent = currentPlanet.lesson;
+
+  const btn = $("wantMoreBtn");
+  btn.textContent = "⭐ Хочу узнать больше про этот курс";
+  btn.classList.remove("hidden");
+  btn.disabled = false;
+  btn.onclick = () => {
+    st.wantMore = true;
+    btn.textContent = "✓ Отмечено! Менеджер расскажет подробнее";
+    btn.disabled = true;
+    logEvent("want_more_clicked", { planet: currentPlanet.id });
+  };
+
+  logEvent("planet_completed", {
+    planet: currentPlanet.id,
+    correct: st.correct,
+    total: currentPlanet.questions.length
+  });
+
+  $("crystalCount").textContent = completedCount();
+  $("crystalCount2").textContent = completedCount();
+}
+
+$("rewardContinue").addEventListener("click", () => {
+  renderMap();
+  show("screen-map");
+});
+$("backToMap").addEventListener("click", () => {
+  renderMap();
+  show("screen-map");
+});
+
+/* ============================================================
+   СКОРИНГ ИНТЕРЕСОВ
+   ============================================================ */
+function interestScore(id) {
+  const st = state.progress[id];
+  if (!st.answered) return 0;
+  let score = st.answered * 1 + st.correct * 2;
+  if (st.wantMore) score += 15;
+  score += Math.min(st.timeMs / 15000, 6); // до +6 за вовлечённость
+  return Math.round(score);
+}
+
+function interestReport() {
+  return CONFIG.planets
+    .map(p => ({ id: p.id, name: p.name, emoji: p.emoji, score: interestScore(p.id) }))
+    .sort((a, b) => b.score - a.score);
+}
+
+/* ============================================================
+   ФИНАЛ
+   ============================================================ */
+$("toFinalBtn").addEventListener("click", () => {
+  const done = completedCount();
+  if (done === 0) {
+    alert("Откройте хотя бы одну планету, чтобы получить награды!");
+    return;
+  }
+  goFinal();
+});
+
+function goFinal() {
+  state.finishedAt = new Date().toISOString();
+  const done = completedCount();
+
+  $("finalCrystals").textContent = done;
+  $("crystalCount2").textContent = done;
+
+  // Сертификат
+  $("certName").textContent = state.user.name || "Капитан";
+  $("certDiscount").textContent = CONFIG.discount;
+  const code = "GV-" + Math.random().toString(36).slice(2, 6).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
+  $("certCode").textContent = code;
+
+  // Интересы
+  const report = interestReport();
+  const maxScore = Math.max(1, ...report.map(r => r.score));
+  const box = $("interests");
+  box.innerHTML = "";
+  report.forEach(r => {
+    const pct = Math.round((r.score / maxScore) * 100);
+    const row = document.createElement("div");
+    row.className = "i-row";
+    row.innerHTML = `
+      <span class="i-name">${r.emoji} ${r.name}</span>
+      <span class="i-bar"><i style="width:${pct}%"></i></span>
+    `;
+    box.appendChild(row);
+  });
+
+  logEvent("game_finished", {
+    crystals: done,
+    certificate: code,
+    interests: report.map(r => ({ planet: r.id, score: r.score }))
+  });
+
+  sendToCRM(buildPayload(code, report));
+  show("screen-final");
+}
+
+/* ============================================================
+   ОТПРАВКА В CRM
+   ============================================================ */
+function buildPayload(certCode, report) {
+  const top = report[0];
+  return {
+    source: "game_galaxy_of_taste",
+    createdAt: new Date().toISOString(),
+    user: state.user,
+    startedAt: state.startedAt,
+    finishedAt: state.finishedAt,
+    crystals: completedCount(),
+    certificate: certCode,
+    discount: CONFIG.discount,
+    // главный интерес — для звонка
+    topInterest: top ? { planet: top.id, name: top.name, score: top.score } : null,
+    interests: report.map(r => ({
+      planet: r.id,
+      name: r.name,
+      score: r.score,
+      completed: state.progress[r.id].completed,
+      wantMore: state.progress[r.id].wantMore,
+      correct: state.progress[r.id].correct,
+      answered: state.progress[r.id].answered,
+      timeMs: state.progress[r.id].timeMs
+    })),
+    events: state.events
+  };
+}
+
+async function sendToCRM(payload) {
+  $("debugOut").textContent = JSON.stringify(payload, null, 2);
+  if (!CONFIG.webhookUrl) {
+    console.log("[CRM] Вебхук не настроен. Данные лида:", payload);
+    return;
+  }
+  try {
+    await fetch(CONFIG.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    console.log("[CRM] Данные отправлены");
+  } catch (e) {
+    console.warn("[CRM] Ошибка отправки:", e);
+  }
+}
+
+/* ============================================================
+   КНОПКИ ФИНАЛА
+   ============================================================ */
+$("bookBtn").addEventListener("click", () => {
+  logEvent("consultation_clicked", {});
+  if (CONFIG.consultationUrl) {
+    window.open(CONFIG.consultationUrl, "_blank");
+  } else {
+    alert("Спасибо! Мы свяжемся с вами по указанному телефону в ближайшее время.");
+  }
+  // повторно отправим событие клика в CRM
+  sendToCRM(buildPayload($("certCode").textContent, interestReport()));
+});
+
+$("toggleDebug").addEventListener("click", () => {
+  $("debugOut").classList.toggle("hidden");
+});
+
+$("replayBtn").addEventListener("click", () => {
+  location.reload();
+});
+</script>
+</body>
+</html>
